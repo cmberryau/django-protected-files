@@ -7,6 +7,7 @@ class ProtectedFileField(FileField):
     def __init__(self, **kwargs):
         if 'storage' in kwargs:
             print(f'storage \'{kwargs["storage"]}\' provided, ignored')
+            del kwargs['storage']
         super().__init__(storage=import_string(settings.PROTECTED_MEDIA_STORAGE), **kwargs)
 
 
@@ -14,4 +15,5 @@ class ProtectedImageField(ImageField):
     def __init__(self, **kwargs):
         if 'storage' in kwargs:
             print(f'storage \'{kwargs["storage"]}\' provided, ignored')
+            del kwargs['storage']
         super().__init__(storage=import_string(settings.PROTECTED_MEDIA_STORAGE), **kwargs)
