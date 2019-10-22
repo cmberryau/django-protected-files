@@ -1,0 +1,40 @@
+trigger:
+- master
+
+variables:
+    vmImageName: 'Ubuntu-16.04'
+    testImageName: 'protected_files'
+    testContainerName: 'protected_files-tests-run'
+    testResultsFileName: 'test-results.xml'
+    packageFolderName: 'protected_files'
+
+stages:
+  # build stage handles testing and building
+  - stage: Build
+    displayName: Build stage
+    jobs:
+      - job: Build
+        displayName: Build and test images
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+        # build our test  image
+        - script: |
+            docker build --tag $(testImageName):$(Build.SourceVersion) --no-cache .
+          displayName: 'Build the test image'
+
+        # run the test image in a container
+        - script: |
+            docker run --name $(testContainerName) $(testImageName):$(Build.SourceVersion) python runtests.py
+          displayName: 'Execute runtests.py in container'
+
+        # copy the test results out of the container
+        - script: |
+            docker cp $(testContainerName):/app/$(testResultsFileName) ./$(testResultsFileName)
+          displayName: 'Copy test results from test container'
+
+        # publish test results
+        - task: PublishTestResults@2
+          inputs:
+            testResultsFiles: $(testResultsFileName)
+          displayName: 'Publish test results'
